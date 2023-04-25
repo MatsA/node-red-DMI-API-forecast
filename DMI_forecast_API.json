@@ -1,0 +1,311 @@
+[
+    {
+        "id": "c5d9bdc565b8a0de",
+        "type": "tab",
+        "label": "DMI forecast => windspeed, winddirection, waterlevel ",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "0422e8e1aac940f4",
+        "type": "inject",
+        "z": "c5d9bdc565b8a0de",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "14400",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 180,
+        "wires": [
+            [
+                "0acf20134787452b",
+                "323354ee52e4024e",
+                "463423a598af42cf"
+            ]
+        ]
+    },
+    {
+        "id": "0acf20134787452b",
+        "type": "http request",
+        "z": "c5d9bdc565b8a0de",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://dmigw.govcloud.dk/v1/forecastedr/collections/dkss_idw/position?coords=POINT(12.6026 56.1159)&crs=crs84&parameter-name=sea-mean-deviation&api-key=503a2d22......&f=GeoJSON",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 290,
+        "y": 140,
+        "wires": [
+            [
+                "fbbbeb0069491c4f"
+            ]
+        ]
+    },
+    {
+        "id": "fbbbeb0069491c4f",
+        "type": "function",
+        "z": "c5d9bdc565b8a0de",
+        "name": "Get waterlevel",
+        "func": "// payload.features[120].properties[\"sea-mean-deviation\"]\n// payload.features[120].properties.step\n\nlet array = msg.payload.features\nlet arrayLength = array.length\nlet dateNow = new Date();\nlet dateTest = new Date();\nlet timestamp = \"\";\n\nfor (let i = 0; i < arrayLength; i++) {\n    \n    timestamp = (array[i].properties.step);\n    dateTest = new Date(timestamp);\n\n    // @ts-ignore\n    if (dateTest - dateNow >= 0) {       // Don't send old data \n        msg.payload = Math.round(100*(array[i].properties[\"sea-mean-deviation\"]));\n        msg.topic = \"Sea water level, cm\";\n        msg.timestamp = array[i].properties.step;\n\n        node.send(msg);\n    }\n    \n}\n\nnode.done();\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 140,
+        "wires": [
+            [
+                "0de5c8186c1eb49f"
+            ]
+        ]
+    },
+    {
+        "id": "323354ee52e4024e",
+        "type": "change",
+        "z": "c5d9bdc565b8a0de",
+        "name": "Clear chart",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[]",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 180,
+        "wires": [
+            [
+                "0de5c8186c1eb49f",
+                "2580996b12cd2f97",
+                "d8384459407a43ae"
+            ]
+        ]
+    },
+    {
+        "id": "0de5c8186c1eb49f",
+        "type": "ui_chart",
+        "z": "c5d9bdc565b8a0de",
+        "name": "",
+        "group": "9a4af0e5e36ffebc",
+        "order": 1,
+        "width": "12",
+        "height": "6",
+        "label": "Water level, cm",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "dd HH:mm",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "6",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 780,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "463423a598af42cf",
+        "type": "http request",
+        "z": "c5d9bdc565b8a0de",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://dmigw.govcloud.dk/v1/forecastedr/collections/wam_dw/position?coords=POINT(12.6026 56.1159)&crs=crs84&parameter-name=wind-speed,wind-dir&api-key=503a2d22..............&f=GeoJSON",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 290,
+        "y": 220,
+        "wires": [
+            [
+                "2bc6ee032ca97754"
+            ]
+        ]
+    },
+    {
+        "id": "2bc6ee032ca97754",
+        "type": "function",
+        "z": "c5d9bdc565b8a0de",
+        "name": "Get wind speed & wind direction",
+        "func": "// Data from DMI forecast API\n// \"wind-speed\": 3.6219873,\n// \"step\": \"2023-04-23T14:00:00.000Z\",\n// \"wind-dir\": 260.70154\n\nlet array = msg.payload.features;\nlet arrayLength = array.length;\nlet dateNow = new Date();\nlet dateTest = new Date();\nlet timestamp = \"\";\nlet wind = {};\nlet direction = {};\n\nfor (let i = 0; i < arrayLength; i++) {\n    \n    timestamp = (array[i].properties.step);\n    dateTest = new Date(timestamp);\n\n    // @ts-ignore\n    if (dateTest - dateNow >= 0) {       // Don't send old data \n        wind.payload = Math.round(array[i].properties[\"wind-speed\"]*10)/10;\n        wind.topic = \"Wind speed m/s\";\n        wind.timestamp = array[i].properties.step;\n\n        direction.payload = Math.round(array[i].properties[\"wind-dir\"]);\n        direction.topic = \"Wind direction degrees\";\n        direction.timestamp = array[i].properties.step;\n    }\n    node.send([wind, direction]);\n}\n\nnode.done();\n\nreturn null;",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 220,
+        "wires": [
+            [
+                "2580996b12cd2f97"
+            ],
+            [
+                "d8384459407a43ae"
+            ]
+        ]
+    },
+    {
+        "id": "2580996b12cd2f97",
+        "type": "ui_chart",
+        "z": "c5d9bdc565b8a0de",
+        "name": "",
+        "group": "9a4af0e5e36ffebc",
+        "order": 2,
+        "width": "12",
+        "height": "6",
+        "label": "Wind speed, m/s",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "dd HH:mm",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "6",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 790,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d8384459407a43ae",
+        "type": "ui_chart",
+        "z": "c5d9bdc565b8a0de",
+        "name": "",
+        "group": "9a4af0e5e36ffebc",
+        "order": 3,
+        "width": "12",
+        "height": "6",
+        "label": "Wind direction, degrees",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "dd HH:mm",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "6",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 810,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9a4af0e5e36ffebc",
+        "type": "ui_group",
+        "name": "Forecast Domsten",
+        "tab": "d9d5ccf98d0bac71",
+        "order": 1,
+        "disp": false,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "d9d5ccf98d0bac71",
+        "type": "ui_tab",
+        "name": "DMI forecast",
+        "icon": "dashboard",
+        "order": 5,
+        "disabled": false,
+        "hidden": false
+    }
+]
